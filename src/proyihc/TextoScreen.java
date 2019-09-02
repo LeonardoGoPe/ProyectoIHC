@@ -5,22 +5,22 @@
  */
 package proyihc;
 
+import MODEL.Version;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Scanner;
+import javafx.application.Platform;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
 import javafx.scene.effect.Glow;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -28,76 +28,155 @@ import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Stage;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jsoup.Jsoup;
+
 
 /**
  *
  * @author medin
  */
 public class TextoScreen {
-    Label l;
+    Label l,caption;
     File f;
-    Button volver;
+    Button volver,info;
     VBox root,v,v1;
-    HBox h1;
+    HBox h1,menuaba;
+    ScrollPane menuBotones,scrtext;
     TextArea text;
+    TextFlow textt;
+    Text t;
     int var=200;
     static int i=0;
-    String textoori;
-    public TextoScreen(File f){
+    String nombrepag;
+    DatosExcel datosE;
+    
+    public TextoScreen(File f,String nombrepag){
         this.f=f;
-        
+        this.nombrepag=nombrepag;
         InicializarComponentes();
         Diseño();
-        leerexcel();
+        obtener(datosE.leerexcel());
     }
     public Parent getroot(){
         return root;
     }
     public void InicializarComponentes(){
+        
         root= new VBox(05);
-        l= new Label();
+        l= new Label(nombrepag);
+        caption=new Label();
         l.setFont(new Font(20));
+        t=new Text();
+        t.setWrappingWidth(200);
+        textt= new TextFlow();
+        textt.getChildren().addListener(
+                (ListChangeListener<Node>) ((change) -> {
+                    textt.layout();
+                    scrtext.layout();
+                    scrtext.setVvalue(1.0f);
+                }));
+        
+        
         text= new TextArea();
-        text.setMinSize(600, 300);
+        text.setMinSize(620, 360);
         text.setEditable(false);
         text.setWrapText(true);
-        volver= new Button("Volver");
+        volver = new Button("Volver");
+        datosE = new DatosExcel(f);
+        
         HBox h= new HBox(20);
-        h.setPadding(new Insets(40, 50, 0, 80));
+        h.setPadding(new Insets(10, 20, 0, 20));
         ImageView im= new ImageView(new Image("img/logo.png"));
         im.setOpacity(0.94);
         im.setFitWidth(70);
         im.setFitHeight(70);
         h.getChildren().addAll(l);
-        h1= new HBox();
-        v1= new VBox(10);
+        h1= new HBox(5);
+        v1= new VBox(5);
+        v1.setPadding(new Insets(5, 0, 10, 0));
+        
+        scrtext= new ScrollPane();
+        scrtext.setMinSize(620, 380);
+        scrtext.setMaxSize(620, 360);
+        scrtext.setStyle("-fx-background-color: transparent");
+        scrtext.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        scrtext.setContent(textt);
+        scrtext.setFitToWidth(true);
+        scrtext.setFitToHeight(true);
+        
+        
+        menuBotones = new ScrollPane();
+        menuBotones.setStyle("-fx-background-color: transparent");
+        menuBotones.autosize();
+        menuBotones.setVbarPolicy(ScrollPane.ScrollBarPolicy.ALWAYS);
+        menuBotones.setContent(v1);
         v= new VBox(10);
-        v.setPadding(new Insets(20, 50, 50, 50));
-        v.getChildren().addAll(text,volver);
-        h1.getChildren().addAll(v1,v);
+        root.setOnMouseClicked(e->{
+            System.out.println(e.getX()+" "+ e.getY());
+        });
+        menuaba= new HBox(200);
+        info= new Button("Ver Info");
+        info.setDisable(true);
+        menuaba.getChildren().addAll(volver,info);
+        v.setPadding(new Insets(10, 20, 05, 10));
+        
+//        v.getChildren().addAll(text,volver);
+        
+        v.getChildren().addAll(menuaba,scrtext);
+        scrtext.setOnMouseEntered(e->{
+            info.setEffect(new Glow(05));
+        });
+        scrtext.setOnMouseExited(e->{
+            info.setEffect(null);
+        });
+        
+        h1.getChildren().addAll(v,menuBotones);
         root.getChildren().addAll(h,h1);
         volver.setOnAction(e-> volver());
         root.setBackground(new Background(new BackgroundFill(Color.ALICEBLUE, CornerRadii.EMPTY, Insets.EMPTY)));
+    
     }
     public void Diseño(){
-        ObservableList<Node> o=v.getChildren();
+        ObservableList<Node> o=menuaba.getChildren();
         for (Node node : o) {
             if(node instanceof Button){
-                ((Button) node).setMinSize(150, 60);
+                ((Button) node).setMinSize(80, 20);
                 ((Button) node).setFont(new Font(20));
+                ((Button) node).setTextFill(Color.WHITE);
+                ((Button) node).setStyle("-fx-background-color: #483D8B");
 //                node.setStyle(value);
                 node.setOnMouseEntered(e->{
                     
-                    ((Button) node).setFont(new Font(25));
+                    ((Button) node).setFont(new Font(22));
+                    ((Button) node).setEffect(new Glow(0.5));
+                });
+                node.setOnMouseExited(e->{
+                    ((Button) node).setFont(new Font(20));
+                    ((Button) node).setEffect(null);
+                });
+            }
+        }
+        
+    }
+    public void DiseñoVersiones(){
+        ObservableList<Node> o=v.getChildren();
+        for (Node node : o) {
+            if(node instanceof Button){
+                ((Button) node).setMinSize(80, 20);
+                ((Button) node).setFont(new Font(20));
+//                ((Button) node).setTextFill(Color.WHITE);
+//                ((Button) node).setStyle("-fx-background-color: #483D8B");
+//                node.setStyle(value);
+                node.setOnMouseEntered(e->{
+                    
+                    ((Button) node).setFont(new Font(22));
                     ((Button) node).setEffect(new Glow(0.5));
                 });
                 node.setOnMouseExited(e->{
@@ -107,19 +186,38 @@ public class TextoScreen {
             }
         }
     }
-    public void leerarchivo(File f){
-        if(!f.exists()) System.out.println("No existe el directorio");
-        try {
-            Scanner sc=new Scanner(f);
-            String buf;
-            while (sc.hasNext()) {
-                buf=sc.nextLine();
-                System.out.println(buf);
+    public void obtener(ArrayList<Version> versiones){
+        for (i=0; i < versiones.size(); i++) {
+            String ver=((Version)versiones.get(i)).getNo();
+//          Button b= new Button("Version "+ver.substring(0, ver.length()-2));
+            Button b= new Button(((Version)versiones.get(i)).getFecha());
+//            b.setTextFill(Color.WHITE);
+//            b.setStyle("-fx-background-color: #483D8B");
+            b.setOpacity(0.95);
+            v1.getChildren().add(b);
+            v1.setStyle("-fx-background-color: transparent");
+            b.setOnAction(new TextoScreen.botonEvent((Version) versiones.get(i)));
+            
         }
-        }catch(IOException e){        System.out.println("No se pudo leer el archivos");
-            }
+        
     }
+    public void appendBold(String msg) { //similar for italic and regular
+    append(msg, "-fx-font-weight: bold");
+}
 
+private synchronized void append(String msg, String style) {
+    Platform.runLater(() -> {
+        textt.getChildren().remove(t);
+        t.setText(msg);
+        
+        t.setFont(Font.font(13));
+        if (!style.equals("")) {
+            t.setStyle(style);
+        }
+        
+        textt.getChildren().add(t);
+    });
+}
     private void volver() {
         MainScreen m= new MainScreen(f);
         Scene s= new Scene(m.getroot(), 800, 500);
@@ -127,60 +225,37 @@ public class TextoScreen {
        
         st.setScene(s);
     }
-    public void leerexcel(){
-        List celldata= new ArrayList();
-        List Celdat=new ArrayList();
-        try {
-            FileInputStream fis= new FileInputStream(f);
-            XSSFWorkbook wb= new XSSFWorkbook(fis);
-            XSSFSheet sheet= wb.getSheetAt(0);
-            Iterator rowit= sheet.rowIterator();
-            while (rowit.hasNext()) {
-                XSSFRow row =(XSSFRow) rowit.next();
-                Iterator column= row.cellIterator();
-                while (column.hasNext()) {
-                    XSSFCell celda = (XSSFCell)column.next();
-                    Celdat.add(celda);
-                }
-                celldata.add(Celdat);
-            
-            }
-        } catch (Exception e) {
+
+    
+    
+    private class botonEvent implements EventHandler<ActionEvent> {
+        Version v=new Version();
+        public botonEvent(Version v){
+            this.v=v;
         }
-        obtener(celldata);
-    }
-    public void obtener(List CellDataList){
-        List fila=new ArrayList();
-        List fin=new ArrayList() ;
-        System.out.println(CellDataList.size());
-        
-        for (i=3; i < 7; i++) {
-            Button b= new Button("Version "+(i-3));
-            v1.getChildren().add(b);
-            b.setOnAction(e->{
-                textoori=text.getText();
-                var=var-50;
-                text.setText(textoori.substring(0,var));
+        public void handle(ActionEvent ke) {
+            //Eliminar etiquetas html
+            l.setText(nombrepag+"\t"+v.getResponsable());
+//            t.setText(Jsoup.parse(v.getVersionA()).wholeText());
+            append(Jsoup.parse(v.getVersionA()).wholeText(),"");
+            text.appendText(Jsoup.parse(v.getVersionA()).wholeText());
+            
+            
+            info.setDisable(false);
+            info.setOnMouseClicked(e->{
+                MostrarInfo(v);
             });
-        }
-        for (int i = 0; i < CellDataList.size(); i++) {
-            fila= (List) CellDataList.get(i);
-            l.setText(fila.get(0).toString());
-            System.out.println("<<<<<<"+fila.get(3));
-            fin=(List) CellDataList.get(6);
             
-            for (int j = 0; j < fila.size(); j++) {
-                XSSFCell celda=(XSSFCell) fila.get(j);
-//                System.out.println(celda.toString()+"\n");
-//                String valorcelda= celda.toString();
-//                text.setText(text.getText()+"\n"+valorcelda);
-            }
+            
+           
         }
-        XSSFCell celda=(XSSFCell) fila.get(fin.size()-1);
-        text.setText(l.getText()+""+text.getText()+"\n\n"+Jsoup.parse(celda.toString()).wholeText());
-//        
-//        text.setText(l.getText()+""+text.getText()+"\n"+celda.toString());
-        System.out.println(celda.toString());
-        
+    }
+    public void MostrarInfo(Version v){
+        InfoReporte i= new InfoReporte(v);
+        Stage st=new Stage();
+        Scene s=new Scene(i.getroot(),600, 200);
+        st.setTitle(nombrepag);
+        st.setScene(s);
+        st.showAndWait();
     }
 }
